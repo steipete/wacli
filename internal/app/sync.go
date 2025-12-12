@@ -96,11 +96,13 @@ func (a *App) Sync(ctx context.Context, opts SyncOptions) (SyncResult, error) {
 		case *events.HistorySync:
 			fmt.Fprintf(os.Stderr, "\nProcessing history sync (%d conversations)...\n", len(v.Data.Conversations))
 			for _, conv := range v.Data.Conversations {
+				lastEvent.Store(time.Now().UTC().UnixNano())
 				chatID := strings.TrimSpace(conv.GetID())
 				if chatID == "" {
 					continue
 				}
 				for _, m := range conv.Messages {
+					lastEvent.Store(time.Now().UTC().UnixNano())
 					if m.Message == nil {
 						continue
 					}

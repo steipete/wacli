@@ -149,14 +149,22 @@ func (c *Client) Connect(ctx context.Context, opts ConnectOptions) error {
 
 func (c *Client) AddEventHandler(handler func(interface{})) uint32 {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.client.AddEventHandler(handler)
+	cli := c.client
+	c.mu.Unlock()
+	if cli == nil {
+		return 0
+	}
+	return cli.AddEventHandler(handler)
 }
 
 func (c *Client) RemoveEventHandler(id uint32) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.client.RemoveEventHandler(id)
+	cli := c.client
+	c.mu.Unlock()
+	if cli == nil {
+		return
+	}
+	cli.RemoveEventHandler(id)
 }
 
 func (c *Client) SendText(ctx context.Context, to types.JID, text string) (types.MessageID, error) {
