@@ -154,18 +154,23 @@ func (d *DB) ensureSchema() error {
 		return nil
 	}
 
+	// Ensure triggers match our expected semantics (FTS5 supports DELETE directly).
 	if _, err := d.sql.Exec(`
-		CREATE TRIGGER IF NOT EXISTS messages_ai AFTER INSERT ON messages BEGIN
+		DROP TRIGGER IF EXISTS messages_ai;
+		DROP TRIGGER IF EXISTS messages_ad;
+		DROP TRIGGER IF EXISTS messages_au;
+
+		CREATE TRIGGER messages_ai AFTER INSERT ON messages BEGIN
 			INSERT INTO messages_fts(rowid, text, media_caption, filename, chat_name, sender_name)
 			VALUES (new.rowid, COALESCE(new.text,''), COALESCE(new.media_caption,''), COALESCE(new.filename,''), COALESCE(new.chat_name,''), COALESCE(new.sender_name,''));
 		END;
-		CREATE TRIGGER IF NOT EXISTS messages_ad AFTER DELETE ON messages BEGIN
-			INSERT INTO messages_fts(messages_fts, rowid, text, media_caption, filename, chat_name, sender_name)
-			VALUES ('delete', old.rowid, COALESCE(old.text,''), COALESCE(old.media_caption,''), COALESCE(old.filename,''), COALESCE(old.chat_name,''), COALESCE(old.sender_name,''));
+
+		CREATE TRIGGER messages_ad AFTER DELETE ON messages BEGIN
+			DELETE FROM messages_fts WHERE rowid = old.rowid;
 		END;
-		CREATE TRIGGER IF NOT EXISTS messages_au AFTER UPDATE ON messages BEGIN
-			INSERT INTO messages_fts(messages_fts, rowid, text, media_caption, filename, chat_name, sender_name)
-			VALUES ('delete', old.rowid, COALESCE(old.text,''), COALESCE(old.media_caption,''), COALESCE(old.filename,''), COALESCE(old.chat_name,''), COALESCE(old.sender_name,''));
+
+		CREATE TRIGGER messages_au AFTER UPDATE ON messages BEGIN
+			DELETE FROM messages_fts WHERE rowid = old.rowid;
 			INSERT INTO messages_fts(rowid, text, media_caption, filename, chat_name, sender_name)
 			VALUES (new.rowid, COALESCE(new.text,''), COALESCE(new.media_caption,''), COALESCE(new.filename,''), COALESCE(new.chat_name,''), COALESCE(new.sender_name,''));
 		END;
