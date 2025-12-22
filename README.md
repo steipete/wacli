@@ -15,15 +15,18 @@ Core implementation is in place. See `docs/spec.md` for the full design notes.
 
 ## Install / Build
 
-Install via Homebrew (tap):
+Choose **one** of the following options.  
+If you install via Homebrew, you can skip the local build step.
+
+### Option A: Install via Homebrew (tap)
 
 - `brew install steipete/tap/wacli`
 
-Build locally:
+### Option B: Build locally
 
 - `go build -tags sqlite_fts5 -o ./dist/wacli ./cmd/wacli`
 
-Run:
+Run (local build only):
 
 - `./dist/wacli --help`
 
